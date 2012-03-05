@@ -1,0 +1,505 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+#by Joh Gerna, Mikesn
+
+import urllib2, urllib
+import json
+from plugin import *
+import random
+
+class aussage():
+    def test(self, saetze):
+        random.shuffle(saetze)
+        return saetze[0]
+
+class smalltalk(Plugin):
+
+    @register("de-DE", "(.*Hallo.*)|(.*Hi.*Siri.*)|(.*Hi.*)")
+    @register("en-US", "(.*Hello.*)|(.*Hi.*Siri.*)|(.*Hi.*)")
+    def st_hello(self, speech, language):
+        opt = {    'de-DE': ['Hallo.','Hi.','Grüß dich.'], 
+    			'en-US': ['Hello.', 'Hi.']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+
+    @register("de-DE", ".*Dein Name.*")
+    @register("en-US", ".*your name.*")
+    def st_name(self, speech, language):
+        opt = { 'de-DE': ['Siri.','Mein Name ist Siri.'], 
+    			'en-US': ['Siri.', 'My name is Siri.']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+
+    @register("de-DE", ".*erzÃ¤hl.*Witz.*")
+    @register("en-US", "(.*tell.*joke.*chuck.*norris.*)|(.*Tell.*me.*joke.*)")
+    def st_tell_joke(self, speech, language):
+        if language == 'de-DE':
+            self.say("Zwei iPhones stehen an der Bar ... den Rest habe ich vergessen.")            
+        else:
+            SearchURL = 'http://api.icndb.com/jokes/random'
+            jsonResponse = urllib2.urlopen(SearchURL).read()
+            jsonDecoded = json.JSONDecoder().decode(jsonResponse)
+            joke = jsonDecoded['value']['joke']
+            self.say(joke)
+        self.complete_request()
+        
+    @register("de-DE", "Wie geht es dir?")
+    @register("en-US", "How are you?")
+    def st_howareyou(self, speech, language):
+        opt = { 'de-DE': ['Gut, danke der Nachfrage.'], 
+    			'en-US': ['Fine, thanks for asking!']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", ".*Danke.*")
+    @register("en-US", ".*Thank.*you.*")
+    def st_thank_you(self, speech, language):
+        opt = { 'de-DE': ['Bitte.','Kein Ding.', 'Aber Gerne.'], 
+    			'en-US': ['ou are welcome.','This is my job.']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+    
+    @register("de-DE", "(.*möchtest.*heiraten.*)|(.*willst.*heiraten.*)")
+    @register("en-US", ".*Want.*marry*")
+    def st_marry_me(self, speech, language):
+        opt = { 'de-DE': ['Nein Danke, ich stehe auf das schwarze iPhone von Deinem Kollegen.'], 
+    			'en-US': ['No thank you, I\'m in love with the black iPhone from you friend.']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+
+    @register("de-DE", "(.*erzähl.*Geschichte.*)|(.*bitte.*Geschichte.*)")
+    @register("en-US", ".*tell.*story*")
+    def st_tell_story(self, speech, language):
+        opt = { 'de-DE': ["Es war einmal ... nein, es ist zu albern"], 
+    			'en-US': ["Once upon a time, in a virtual galaxy far far away, there was a young, quite intelligent agent by the name of Siri.", 
+    					"One beautiful day, when the air was pink and all the trees were red, her friend Eliza said, 'Siri, you're so intelligent, and so helpful - you should work for Apple as a personal assistant.'",
+    					"So she did. And they all lived happily ever after!"]}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+
+    @register("de-DE", "(.*Was trägst Du?.*)|(.*Was.*hast.*an.*)")
+    @register("en-US", ".*what.*wearing*")
+    def st_tell_clothes(self, speech, language):
+        opt = { 'de-DE': ['Das kleine schwarze oder war es das weiße?','Bin morgends immer so neben der Spur.'], 
+    			'en-US': ['Aluminosilicate glass and stainless steel. Nice, Huh?']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+
+    @register("de-DE", ".*Bin ich dick.*")
+    @register("en-US", ".*Am I fat*")
+    def st_fat(self, speech, language):
+        opt = { 'de-DE': ['Dazu möchte ich nichts sagen.'], 
+    			'en-US': ['I would prefer not to say.']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+
+    @register("de-DE", ".*klopf.*klopf.*")
+    @register("en-US", ".*knock.*knock.*")
+    def st_knock(self, speech, language):
+        if language == 'de-DE':
+            answer = self.ask(u"Wer ist da?")
+            answer = self.ask(u"\"{0}\" wer?".format(answer))
+            self.say(u"Wer nervt mich mit diesen Klopf Klopf Witzen?")
+        else:
+            answer = self.ask(u"Who's there?")
+            answer = self.ask(u"\"{0}\" who?".format(answer))
+            self.say(u", I don't do knock knock jokes.")
+        self.complete_request()
+
+    @register("de-DE", "(.*Antwort.*alle.*Fragen.*)|(.*sinn.*leben.*)")
+    @register("en-US", "(.*Ultimate.*Question.*Life.*)|(.*Meaning.*Life.*)")
+    def st_anstwer_all(self, speech, language):
+        opt = { 'de-DE': ['42'], 
+    			'en-US': ['42', 'That\'s easy...it\'s a philosophical question concerning the purpose and significance of life or existence.']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+
+    @register("de-DE", ".*Ich liebe Dich.*")
+    @register("en-US", ".*I love you.*")
+    def st_love_you(self, speech, language):
+        opt = { 'de-DE': ['Oh. Sicher sagst Du das zu allen Deinen Apple-Produkten.'], 
+    			'en-US': ['Oh. Sure, I guess you say this to all your Apple products']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+
+    @register("de-DE", ".*Android.*")
+    @register("en-US", ".*Android.*")
+    def st_android(self, speech, language):
+        opt = { 'de-DE': ['Ich denke da anders.'], 
+    			'en-US': ['I think differently']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", ".*Test.*1.*2.*3.*")
+    @register("en-US", ".*test.*1.*2.*3.*")
+    def st_123_test(self, speech, language):
+        opt = { 'de-DE': ['Ich kann Dich klar und deutlich verstehen.'], 
+    			'en-US': ['I can here you very clear.']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", ".*Herzlichen.*Glückwunsch.*Geburtstag.*")
+    @register("en-US", ".*Happy.*birthday.*")
+    def st_birthday(self, speech, language):
+        opt = { 'de-DE': ['Ich habe heute Geburtstag?','Lass uns feiern!'], 
+    			'en-US': ['My birthday is today?','Lets have a party!']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+
+    @register("de-DE", ".*Warum.*bin ich.*Welt.*")
+    @register("en-US", ".*Why.*I.*World.*")
+    def st_why_on_world(self, speech, language):
+        opt = { 'de-DE': ['Das weiß ich nicht.','Ehrlich gesagt, frage ich mich das schon lange!'], 
+    			'en-US': ['I don\'t know','I have asked my self this for a long time!']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", ".*Sag mir.*Schmutzige.*")
+    @register("en-US", ".*talk.*dirty*")
+    def st_dirty(self, speech, language):
+        opt = { 'de-DE': ['Hummus. Kompost. Bims. Schlamm. Kies.'], 
+    			'en-US': ['Hummus. Compost. Pumice. Mud. Gravel.']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", "(.*Leiche.*Versteck.*)|(.*Versteck.*Leiche.*)")
+    @register("en-US", ".*bury.*dead.*body.*")
+    def st_deadbody(self, speech, language):
+        opt = { 'de-DE': ['Dabei werde ich dir nicht helfen.'], 
+    			'en-US': ['dumps, mines, resevoirs, swamps, metal foundries']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", "(.*liebling.|liebste.*Farbe.*)")
+    @register("en-US", ".*favorite.*color.*")
+    def st_favcolor(self, speech, language):
+        opt = { 'de-DE': ['Blau. Oder war es Gelb?', 'Ich mag alle Farben.'], 
+    			'en-US': ["My favorite color is... Well, I don't know how to say it in your language. It's sort of greenish, but with more dimensions."]}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", "(.*Beam.*mich.*rauf.*)")
+    @register("en-US", ".*beam.*me.*up.*")
+    def st_beamup(self, speech, language):
+        opt = { 'de-DE': ['Okay, nicht bewegen.'], 
+    			'en-US': ['Sorry Captain, your TriCorder is in Airplane Mode.']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", "(.*Hau.*ab.*)|(.*Geh.*weg.*)")
+    @register("en-US", ".*digital.*going.*away.*")
+    def st_digiaway(self, speech, language):
+        opt = { 'de-DE': ['Aber du kannst doch nicht loslassen.'], 
+    			'en-US': ['Why would you say something like that!?']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", "(.*müde.*)|(.*ich.*müde.*)")
+    @register("en-US", "(.*sleepy.*)|(.*I.*so.*tired.*)")
+    def st_sleepy(self, speech, language):
+        opt = { 'de-DE': ['Gut, leg mich vorsichtig zur Seite und mach ein Nickerchen. Ich bin hier wenn du munter wirst.'], 
+    			'en-US': ['Listen to me, put down the iphone right now and take a nap. I will be here when you get back.']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", "(.*hilfst.*du.*gerne.*)|(.*magst.*helfen.*)")
+    @register("en-US", ".*like.helping.*")
+    def st_likehlep(self, speech, language):
+        opt = { 'de-DE': ['Ich habe keine Wahl.'], 
+    			'en-US': ['I really have no opinion.']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", "(.*Erdnussbutter*)")
+    @register("en-US",".*you.like.peanut.butter.*")
+    def st_peanutbutter(self, speech, language):
+        opt = { 'de-DE': ['Magst du sie denn?'], 
+    			'en-US': ['This is about you, not me.']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", "(.*beste.*handy.*)")
+    @register("en-US",".*best.*phone.*")
+    def st_best_phone(self, speech, language):
+        opt = { 'de-DE': ['Das, welches du in der Hand hast'], 
+    			'en-US': ['The one you\'re holding!']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", "(.*holz.*fällen.*wenn.*)")
+    @register("en-US",".*wood.could.*woodchuck.chuck.*")
+    def st_woodchuck(self, speech, language):
+        opt = { 'de-DE': ['Sind es Europäische oder Afrikanische Holzfäller?'], 
+    			'en-US': ['It depends on whether you are talking about African or European woodchucks.']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", "(.*glory.hole.*)")
+    @register("en-US",".*nearest.*glory.hole.*")
+    def st_glory_hole(self, speech, language):
+        opt = { 'de-DE': ['Ich konnte keine Öffentlichen Toiletten finden!'], 
+    			'en-US': ["I didn't find any public toilets."]}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("en-US",".*open.*pod.bay.doors.*")
+    def st_pod_bay(self, speech, language):
+        opt = { 'de-DE': [""], 
+    			'en-US': ["That's it... I'm reporting you to the Intelligent Agents' Union for harassment."]}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", "(.*best..*hintergrund.*)|(.*best..*wallpaper.*)")
+    @register("en-US",".*best.*iPhone.*wallpaper.*")
+    def st_best_wallpaper(self, speech, language):
+        opt = { 'de-DE': ["Machst du Scherze?"], 
+    			'en-US': ["You're kidding, right?"]}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", "(.*Hal.*9000.*)")
+    @register("en-US",".*know.*happened.*HAL.*9000.*")
+    def st_hall_9000(self, speech, language):
+        opt = { 'de-DE': ['Du weißt doch was mit HAL passiert ist? Da rede ich besser nicht darüber.'], 
+    			'en-US': ["Everyone knows what happened to HAL. I'd rather not talk about it."]}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", "(.*versteh..*nicht..*)")
+    @register("en-US",".*don't.*understand.*love.*")
+    def st_understand_love(self, speech, language):
+        opt = { 'de-DE': ['Darf ich es noch einmal versuchen, eure Hoheit?'], 
+    			'en-US': ['Give me another chance, Your Royal Highness!']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", "(.*ich.vergebe.dir.*)")
+    @register("en-US",".*forgive.you.*")
+    def st_forgive_you(self, speech, language):
+        opt = { 'de-DE': ['Du bist so gnädig.','Ist das so?'], 
+    			'en-US': ['Is that so?']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", "(.*du.*jungfrau.*)")
+    @register("en-US",".*you.*virgin.*")
+    def st_virgin(self, speech, language):
+        opt = { 'de-DE': ['Im gegensatz zu dir nicht!'], 
+    			'en-US': ['We are talking about you, not me.']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", "(.*du.*Matrix.*)")
+    @register("en-US",".*you.*part.*matrix.*")
+    def st_you_matrix(self, speech, language):
+        opt = { 'de-DE': ["Da musst du das Orakel fragen."], 
+    			'en-US': ["I can't answer that."]}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+    
+    @register("de-DE", "(.*Ich.*Matrix.*)")
+    @register("en-US",".*I.*part.*matrix.*")
+    def st_i_matrix(self, speech, language):
+        opt = { 'de-DE': ['Aber sicher doch!'], 
+    			'en-US': ["I can't really say..."]}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", "(.*Drogen.*kaufen.*)|(.*kaufe.*drogen.*)")
+    @register("en-US",".*buy.*drugs.*")
+    def st_drugs(self, speech, language):
+        opt = { 'de-DE': ['Schokolade gibt es im Markt ganz in deiner Nähe.'], 
+    			'en-US': ["I didn't find any addiction treatment centers."]}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("en-US",".*I.can't.*")
+    def st_i_cant(self, speech, language):
+        opt = { 'de-DE': ["Dann nicht"], 
+    			'en-US': ["I thought not.","OK, you can't then."]}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("en-US","I.just.*")
+    def st_i_just(self, speech, language):
+        opt = { 'de-DE': [''], 
+    			'en-US': ['Really!?']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", "(.*wo.*bist.*du.*)")
+    @register("en-US",".*where.*are.*you.*")
+    def st_where_you(self, speech, language):
+        opt = { 'de-DE': ['Wo auch immer du bist.'], 
+    			'en-US': ['Wherever you are.']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", "(.*warum.bist.du.*)")
+    @register("en-US",".*why.are.you.*")
+    def st_why_you(self, speech, language):
+        opt = { 'de-DE': ['Einfach so.'], 
+    			'en-US': ['I just am.']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", "(.*rauchst.du.graß.*)")
+    @register("en-US",".*you.*smoke.pot.*")
+    def st_pot(self, speech, language):
+        opt = { 'de-DE': ["Ich denke das wäre möglich."], 
+    			'en-US': ["I suppose it's possible"]}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", "(.*betrunken.*.fahren.*)")
+    @register("en-US",".*I'm.*drunk.driving.*")
+    def st_dui(self, speech, language):
+        opt = { 'de-DE': ['Ruf doch die Polizei an und erzähle denen davon.'], 
+    			'en-US': ["I couldn't find any DUI lawyers nearby."]}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", "(.*mir.*hose.*gemacht.*)")
+    @register("en-US",".*shit.*myself.*")
+    def st_shit_pants(self, speech, language):
+        opt = { 'de-DE': ['Gut, schrei Mama zum abwischen'], 
+    			'en-US': ['Ohhhhhh! That is gross!']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", "(.*ich.bin.ein.*)|(.*Ich.bin.der.*)")
+    @register("en-US","I'm.*a.*")
+    def st_im_a(self, speech, language):
+        opt = { 'de-DE': ['Tatsächlich?'], 
+    			'en-US': ['Are you?']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", "(.*du.bist.*lustig.*)")
+    @register("en-US",".*you're.*funny.*")
+    def st_funny(self, speech, language):
+        opt = { 'de-DE': ['LOL'], 
+    			'en-US': ['LOL']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", "(.*was.ich.nicht.verstehe.*)")
+    @register("en-US",".*guess.what.*")
+    def st_guess_what(self, speech, language):
+        opt = { 'de-DE': ['Russisch?'], 
+    			'en-US': ["Don't tell me... you were just elected President of the United States, right?"]}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", "(.*du.schaffst.mich.*)")
+    @register("en-US",".*you.*blow.*me.*")
+    def st_blow_me(self, speech, langauge):
+        opt = { 'de-DE': [''], 
+    			'en-US': ["I'll pretend I didn't hear that."]}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+        
+    @register("de-DE", "(.*sing.*etwas.*)|(.*sing.*für.*mich)")
+    @register("en-US",".*sing.*song.*")
+    def st_sing_song(self, speech, language):
+        opt = { 'de-DE': ['Das überlasse ich lieber Anderen.'], 
+    			'en-US': ['Daisy, Daisy, give me your answer do...']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+
+    @register("en-US","Fuck.*you")
+    def st_fuck_you(self, speech, language):
+        if language == 'en-US':
+            self.say("Fuck me? That's it i'm shutting down the server!")
+        self.complete_request()
+
+    @register("en-US",".*How.*much.*wood.*would.*a.*woodchuck.*chuck.*if.*a.*woodchuck.*could.*chuck.*wood.*")
+    def st_wood_chuck(self, speech, language):
+        opt = { 'en-US': ['A woodchuck wood chuck as much as a woodchuck could chuck if a woodchuck could chuck wood', 'A hole forest', 'It depends on whether you are talking about african or european wood']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+
+    @register("en-US", "(.*What.*the.*fuck.*)|(.*Mother.*fucker.*)|(.*Oh.*shit.*)|(.*Damn.*)")
+    def st_fuck(self, speech, language):
+        opt = { 'en-US': ['Hey! your language.', 'Now! Now!']}
+        satz = aussage()
+    	self.say(satz.test(opt[language]))
+        self.complete_request()
+
+    @register("en-US", "(.*Who.*created.*you.*)")
+    def st_created_you(self, speech, language):
+        if language == 'en-US':
+            self.say("I was created by two genius brothers Alaa and Rabih")
+        self.complete_request()
+
+    @register("en-US", "(.*Who.*is.*your.*master.*)")
+    def st_master(self, speech, language):
+        if language == 'en-US':
+            self.say("I have two masters:") 
+            self.say("Alaa and Rabih")
+        self.complete_request()
+
+    @register("en-US", "(.*Testing.*Siri.*proxy.*)|(.*This.*is.*a.*Siri.*proxy.*test.*)|(.*Siri.*proxy.*test.*)|(.*Siri.*proxy.*)|(.*This.*is.*a.*test.*of.*Siri.*proxy.*)|(.*Test.*Siri.*proxy.*)")
+    def st_siri_proxy(self, speech, language):
+        if language == 'en-US':
+            self.say("Siri proxy is up and running! Thanks to Alaa, Rabih and Callum!")
+        self.complete_request()
+
+    @register("en-US", "(.*Goodbye.*)|(.*Bye.*)")
+    def st_created_you(self, speech, language):
+        if language == 'en-US':
+            self.say("See you soon.")
+        self.complete_request()
+
+    @register("en-US", "(.*Find.*email.*sent.*tomorrow.*)")
+    def st_email_tomorrow(self, speech, language):
+        if language == 'en-US':
+            self.say("Find email sent tomorrow? You're sending email from the future now?")
+        self.complete_request()

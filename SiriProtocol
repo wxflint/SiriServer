@@ -1,0 +1,192 @@
+SiriProtocol:
+
+SSLed
+
+Connection initiated by iDevice.
+
+Sends http pseudo header like this:
+
+ACE /ace HTTP/1.0
+Host: HOSTNAME
+User-Agent: Assistant(iPhone/iPhone3,1; iPhone OS/5.0.1/9A405) Ace/1.0
+Content-Length: 2000000000
+
+Now there is a streaming protocol. It is initiated by the iPhone, it sends
+(hex) \xaa\xcc\xee\x02
+
+now we have always the same structure:
+A zlib compressed stream which when decompressed has
+a five byte header.
+The first byte tells the command
+\x02 for a binary plist
+\x03 for a Ping (only from iDevice)
+\x04 for a Pong (only from server)
+
+in case of a binary plist
+The following 2 byte are zero, and the last 2 byte are big endian encoded length field.
+It could also be that the last 4 byte are a int32 big endian encoded.
+
+in case of a ping or pong we have a ping/pong sequence number, after each pong we increase the ping/pong count by one.
+
+In case we have a binary plist, we receive until we have received the whole length (this is of course the decompressed size)
+
+Each binary plist is one single command.
+
+---------------------------
+The server replies to these 
+
+by once sending a http response
+HTTP/1.1 200 OK
+Server: Apache-Coyote/1.1
+Date: CURRENT_DATE
+Connection: close
+
+also followed by the ACE2 command \xaa\xcc\xee\x02
+
+The server replies in the same manner as the client requests. It creates a binary plist, calculates the length, creates the 5 byte header puts it in front of the binary plist and zlib compresses this as a continuous stream (do not forget so SYNC_FLUSH).
+
+
+
+---------------------
+
+
+Much more interesting is how these plist are structured and which commands do exist. You can look in the Privateframework of SAObjects, however there is no documentation what each command does, or what should be filled in the fields.
+
+In general there is usually an aceId and a refId, the aceId is always present, the refId is only present on responses, its "refId" is the "aceId" of the request.
+
+"aceId" and "refId" are both uuid like in RFC 4122.
+
+There is always a "group" item, a string describing the command class.
+There is always a "class" item, a string identifying the command exactly.
+
+In case the command has an actual payload that needs to be delivered, this is packed in a sub plist named "properties". This can again have various entries depending on the actual command.
+
+
+-----------------------
+
+
+One of the very first commands an iDevice sends it the 
+"class": "GetSessionCertificate"
+
+which asks the Server do transmit certificates in a "GetSessionCertificateResponse",
+as it has a properties field, having a certificate field.
+
+As far as I could find out, the certificate field is structured as follows:
+First, a six byte header. The first byte seems to be always 1, the second byte might tell how many certificates are included, I always got 2. The next 4 bytes (network order = big endian) denote the size (length) of the first certificate.
+So skipping bytes 0 to 5 and reading length bytes gives us the first certificate in X.509 DER format.
+
+After that there seem to be another length field which is again 4 byte long in big endian. So skipping another four bytes and reading length bytes should gives the second certificate. 
+
+The first certificate by Apple is a CA certificate of "Apple System Integration Certification Authority" signed by apple root ca.
+
+The second certificate is the server certificate issued by the ca.
+
+I tried installing a self signed root ca.
+
+I send a sub CA cert signed by the self signed root ca and a cert signed by this sub ca. However iPhone does not answer react… There are a couple of custom extensions X509 v3 (OIDs) i could not find a documentation on. Also I don't know if it is legal to use them. Maybe they are necessary or the certificate is rejected
+
+-----------------------------------
+
+The next authentication relevant command send by iDevice is:
+"class":"CreateSessionInfoRequest"
+
+which has a "properties": {"sessionInfoRequest": "…"}
+the sessionInfoRequest seems to be some kind of signature or encryption, maybe generated using the public key of the certificate exchanged before. This would allow the server to check if the correct certificate is in use, or validate internal data. I don't know. I know that this value changes every time, maybe a nonce involved? Like a handshake
+
+First 10 bytes seem to be always equal.
+
+What I know is that the server responds to this message either with a negative "class": "CommandFailed" command or in case it could verify the authenticity it replies with a:
+
+"class": "CreateSessionInfoResponse" which has
+"properties": {"sessionInfo": "Binary Token Blob", "validityDuration": 90000}
+
+where sessionInfo is a unique token which allows to reidentify the device, and validityDuration denotes the time (in what?? seconds? would be 25 hours what apple sends) this token is valid. 
+
+Funny:
+Sending a command failed instead of "CreateSessionInfoResponse" lets me bypass this
+
+{"class":"CommandFailed", "properties": {"reason":"Not authenticated", "errorCode":0, "callbacks":[]}, "aceId": str(uuid.uuid4()), "refId": object['aceId'], "group":"com.apple.ace.system"}
+
+
+------------------------------------
+
+In case there is no assistant yet created, the iDevice asks the server to create one (which holds a lot of info about the user) with a CreateAssistant request.
+
+"class": "CreateAssistant"
+it has "properties": {"validationData": "BINARY BLOB"}  
+
+I think validation data is the sessionInfo which was once given by the CreateSessionInfoResponse which might allows the server to check if a session is still valid.
+
+However a valid answer is a
+"class": "AssistantCreated"
+
+It has a "properties": {"speechId": UUID, "assistantId": UUID}
+both properties are very important, together with the validationData, it is everything you need to impersonate somebody or issue commands.
+
+
+Of course we do not need to create an assistant over and over again, we can use
+"class": "LoadAssistant"
+with "properties":{"sessionValidationData": "BINARY BLOB", "speechId": "UUID", "assistantId": "UUID"}
+
+with sessionValidationData probably being the sessionInfo/validationData, I really wonder why they use different names here. speedId and assistantId as received by a previous "AssistantCreated" response.
+
+A valid response to "LoadAssistant" is 
+"class": "AssistantLoaded"
+
+it has  "properties":{"version": "version string of something, i.d.k.", "requestSync": "BOOLEAN (i had False)", "dataAnchor": "I have here 'removed'"}
+
+I don't know what they mean.
+
+
+Invalidating a Session or negative replies:
+
+using "SessionValidationFailed" allows to inform the iDevice about invalid session data,
+one can set one of these possible "properties":{"errorCode": ""}
+
+errorCode can be one of the following: "InvalidSessionInfo" probably in reply to CreateSessionInfoRequest. "InvalidValidationData" probably in case of already existing session e.g. when creating an assistant. "InvalidFingerprint" ???. "ClientNotAuthenticated" general authentication error??. "RegistrationLimitReached", maybe if siri is out of capacity???  "UnsupportedHardwareVersion" when you use an device not officially supported.
+
+
+-----------------------------------------
+
+
+About audio data:
+
+It starts either with a
+"class": "StartSpeechRequest"
+with  'properties': {'codec': 'Speex_WB_Quality8', 'handsFree': False, 'audioSource': 'BuiltInMic'}}
+
+As we can see, we use a Speex Codec on Wideband (16000Hz sample rate) on SpeexQualityLevel 8 here. AudioSource is the source where the audio was recorded from, handsFree probably denotes whether or not we activated siri via home button or just by holding it to the ear but I did not test that.
+
+There is also a
+"class": "StartSpeechDictation"
+which also has the codec information but also other properties I don't have at hand right now…
+
+
+however always after both there are:
+
+"class": "SpeechPacket"
+which has always as refId the aceId of the StartSpeechRequest or StartSpeechDictation so we always know which SpeechPaket belongs to which request.
+Also there are 'properties': {'packets': ['SPEEX STREAM'], 'packetNumber': i}
+It sends an array of packets of a speex stream and the packetNumber, we can use the packetNumber to decide if we received all packets…
+
+
+However we end a audio recording with:
+
+"class": "FinishSpeech"
+which has refId the aceId of the StartSpeechRequest or StartSpeechDictation.
+It also got 'properties': {'packetCount': TotalNumPackets} with TotalNumPackets being the sum of all SpeechPackets the iDevice sent.
+
+
+We can easily decode the audio using libspeex, setting to wb and writing all packets in order of packet number into speex buffer using:
+speex_bits_read_from()
+and then we can loop a decode over:
+speex_decode_int() resulting in each loop in 320 int16 (that are 640 byte) PCM, so one PCM frame.
+When we concat all these frames we have raw PCM audio with sample rate of 16kHz, signed 16 bits per sample in little endian, one channel(mono). We can save this load it with these settings in Audacity or use any other encoder to get mp3, flac or what ever.
+
+
+There can also be a
+"class": "CancelRequest"
+with refId of the request which aborts a SpeechPacket stream… (e.g. user discards)
+
+There is also a 
+"class":"CancelSucceeded", which is a server command to the client. It might be used to acknowledge a successful cancel to in response to a CancelRequest
